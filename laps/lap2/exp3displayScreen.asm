@@ -1,0 +1,18 @@
+.MODEL SMALL
+.STACK 100H
+.data
+str DB "HELLO WORLD!!!$"
+.code
+MAIN PROC
+;Initialize DS
+MOV AX,@DATA
+MOV DS,AX
+;My Code
+LEA DX,str
+MOV AH,02H
+INT 21H 
+;Exit to DOS
+MOV AH,4Ch
+INT 21h
+MAIN ENDP
+END MAIN

@@ -1,0 +1,29 @@
+loope
+    zf 
+
+loopne 
+    zf
+
+loopnz 
+
+
+
+memory inde register 
+    bx
+    di
+    bp
+    si
+
+mov si,0
+l1: 
+    mov al,arr[si]
+    inc si 
+loop l1 
+
+
+example 
+aray1 db 4 dup(0)
+array1 db 0,0,0,0
+
+array2 db 3 dup(5,3) 
+

@@ -1,0 +1,21 @@
+.MODEL SMALL
+.STACK 100H
+.data
+
+
+.code
+MAIN PROC
+;initialize DS
+MOV AX,@data
+MOV DS,AX
+
+;My code
+MOV AX,11H
+MOV BX,22H
+MOV CX,3333H
+;EXIT TO DOS 
+MOV AX,4CH
+INT 21H
+
+MAIN ENDP
+END MAIN 

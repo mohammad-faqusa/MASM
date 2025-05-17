@@ -1,0 +1,52 @@
+.MODEL SMALL
+.STACK 100H
+
+
+.data
+str DB 'hello my name is mohammad$'
+newline DB 0DH, 0AH, '$'
+
+.code 
+
+
+
+MAIN PROC
+MOV AX,@DATA
+MOV DS,AX
+
+LEA DX,str
+MOV AH,09H
+INT 21h
+
+
+
+MOV DL,0DH
+MOV AH,02h
+INT 21h
+MOV DL,0AH
+MOV AH,02h
+INT 21h
+
+LEA DX,newline
+MOV AH,09H
+INT 21h
+
+
+MOV DL,61H
+MOV AH,02h
+INT 21h
+
+MOV AH,01h
+INT 21h
+MOV DL,AL
+MOV AH,02h
+INT 21h
+
+
+MOV AH,4CH
+INT 21h
+
+
+MAIN ENDP
+
+END MAIN

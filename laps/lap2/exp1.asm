@@ -1,0 +1,18 @@
+.MODEL SMALL
+.STACK 100H
+.data
+Var1 DB 55
+VAR2 DW 2378h
+.code
+MAIN PROC
+;Initialize DS
+MOV AX,@DATA
+MOV DS,AX
+;My Code
+MOV AL, Var1
+MOV BX, Var2
+;Exit to DOS
+MOV AH,4Ch
+INT 21h
+MAIN ENDP
+END MAIN

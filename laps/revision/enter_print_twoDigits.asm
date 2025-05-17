@@ -1,0 +1,52 @@
+
+.MODEL SMALL
+.STACK 100h
+
+.DATA
+ten DB 10
+rem DB 0
+num DB 0
+
+
+.code
+
+
+MAIN PROC
+MOV AX,@DATA
+MOV DS,AX
+
+
+MOV AH,01h
+INT 21h
+SUB AL,30h
+MUL ten
+ADD num,AL
+
+MOV AH,01h
+INT 21H
+SUB AL,30h
+ADD num,AL
+
+MOV AH,0H
+MOV AL,num
+DIV ten
+MOV DL,AL
+MOV rem,AH
+ADD DL,30h
+MOV AH,02h
+INT 21h
+MOV DL,rem
+ADD DL,30h
+MOV AH,02h
+INT 21h
+
+MOV AH,4CH
+INT 21h
+
+
+
+
+MAIN ENDP
+
+END MAIN
+
