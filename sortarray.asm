@@ -26,6 +26,19 @@ MAIN PROC
     MOV AX, @DATA ; move the data section address to AX
     MOV DS, AX ; move the the stored data section address to data segment
     
+    CALL SortArray
+    
+    ; Exit to DOS
+    MOV AH, 4CH
+    INT 21H
+MAIN ENDP
+
+; ==================== PROCEDURES ====================
+
+; ==================== Array Select ==================
+
+SortArray PROC
+
     ; Get array size from user
     CALL InitializeArray ;function to initialzie the array with selected size
     
@@ -40,13 +53,10 @@ MAIN PROC
     
     ; Display the array contents
     CALL PrintArray ; function to print the content of the array 
-    
-    ; Exit to DOS
-    MOV AH, 4CH
-    INT 21H
-MAIN ENDP
 
-; ==================== PROCEDURES ====================
+    RET
+
+SortArray ENDP
 
 ; Shows a message pointed to by DX
 ShowMessageDX PROC 

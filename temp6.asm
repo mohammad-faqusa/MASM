@@ -6,26 +6,122 @@
     buffer      DB 100 DUP('$')   ; General purpose input buffer
     
     ; Messages
+    menu_msg db 0Dh,0Ah,'1. Array Sorting/Even Odd Count',0Dh,0Ah
+             db '2. Title Case',0Dh,0Ah
+             db '3. Power Two',0Dh,0Ah
+             db '4. Exit',0Dh,0Ah
+             db 'Enter your choice: $'
+    invalid_choice_msg db 0Dh,0Ah,'Invalid choice! Press any key...$'
+
     newline         DB 13, 10, '$' ; an array of two elements (carriage return , new line) used to write new line
     arraySizePrompt DB 'Enter array size: $' ; msg hint user to input the array size
     elementsPrompt  DB 'Enter array elements (space-separated): $'; msg hints user to input the array elements
     msgArrayResult      DB 'Array contents: $' ; msg occur before the printed array 
     evenMsg DB 'Number of even: $' ;msg occor before displaying the number of evens 
-    oddMsg  DB 'Number of odd: $';msg occor before displaying the number of odds  
+    oddMsg  DB 'Number of odd: $';msg occor before displaying the number of odds
+    msgTitle          DB 0Dh,0Ah,'Enter a sentence to convert to Title Case:',0Dh,0Ah,'$'
+    msgWordCount      DB 0Dh,0Ah,'Number of words: $'
+    msgConvertedTitle DB 0Dh,0Ah,'Converted Title Case:',0Dh,0Ah,'$'  
     
     ; Data Variables
     ParsedValue_array     DW 0               ; Stores converted numbers
     arraySize       DW 0               ; Size of the array
     arrayOfNumbers    DW 100 DUP(0)      ; Array to store numbers
 
-.CODE
+    wordCount   DW 0              ; Counter for number of words
 
+.CODE
+    
 
 ; ==================== MAIN PROGRAM ====================
 MAIN PROC
     MOV AX, @DATA ; move the data section address to AX
     MOV DS, AX ; move the the stored data section address to data segment
+
+    menu:
+    call ClearScreen
+    call DisplayMenu
+    call GetChoice
     
+    cmp al, '1'
+    je array_sort
+    cmp al, '2'
+    je title_case
+    cmp al, '3'
+    je power_two
+    cmp al, '4'
+    je exit_program
+    
+    ; Invalid choice
+    lea dx, invalid_choice_msg
+    call ShowMessageDX
+    call WaitForKey
+    jmp menu
+
+array_sort:
+    call SortArray
+    call WaitForKey
+    jmp menu
+
+title_case:
+    call TitleCaseConversion
+    call WaitForKey
+    jmp menu
+
+power_two:
+    ; call CalculatePowerTwo
+    call WaitForKey
+    jmp menu
+
+exit_program:
+    mov ax, 4C00h
+    int 21h
+MAIN ENDP
+
+; ==================== PROCEDURES ====================
+
+;=====================Menu Procedures ================
+
+ClearScreen proc
+    mov ax, 0600h   ; Scroll entire window
+    mov bh, 07h     ; Normal attribute
+    mov cx, 0000h   ; Upper-left corner
+    mov dx, 184Fh   ; Lower-right corner
+    int 10h
+    
+    ; Set cursor position to top-left
+    mov ah, 02h
+    mov bh, 00h
+    mov dx, 0000h
+    int 10h
+    ret
+ClearScreen endp
+
+DisplayMenu proc
+    mov ah, 09h
+    lea dx, menu_msg
+    int 21h
+    ret
+DisplayMenu endp
+
+GetChoice proc
+    mov ah, 01h
+    int 21h
+    ret
+GetChoice endp
+
+WaitForKey proc
+    mov ah, 07h
+    int 21h
+    ret
+WaitForKey endp
+
+
+
+; ==================== Array Select ==================
+
+SortArray PROC
+
     ; Get array size from user
     CALL InitializeArray ;function to initialzie the array with selected size
     
@@ -40,13 +136,10 @@ MAIN PROC
     
     ; Display the array contents
     CALL PrintArray ; function to print the content of the array 
-    
-    ; Exit to DOS
-    MOV AH, 4CH
-    INT 21H
-MAIN ENDP
 
-; ==================== PROCEDURES ====================
+    RET
+
+SortArray ENDP
 
 ; Shows a message pointed to by DX
 ShowMessageDX PROC 
@@ -494,5 +587,113 @@ CEO_Print:
         POP     SI
         RET
 CountEvenOdd ENDP
+
+
+;====================== Title Case ============================
+TitleCaseConversion PROC
+    PUSH AX
+    PUSH BX
+    PUSH CX
+    PUSH DX
+    PUSH SI
+    PUSH DI
+    
+    CALL ClearScreen
+    
+    ; Display prompt
+    LEA DX, msgTitle
+    CALL ShowMessageDX
+    
+    ; Read input string using existing buffer
+    LEA DI, buffer
+    CALL ReadLine
+    CALL PrintNewLine
+    
+    ; Initialize variables
+    MOV wordCount, 0
+    MOV SI, DI          ; SI will point to current character
+    MOV BL, 1           ; BL=1 means we're at start of a new word
+    
+ConvertLoop:
+    MOV AL, [SI]        ; Get current character
+    CMP AL, '$'         ; Check for end of string
+    JE ConversionDone
+    
+    ; Check if we're at start of a word
+    CMP BL, 1
+    JNE NotWordStart
+    
+    ; Convert to uppercase if lowercase letter
+    CMP AL, 'a'
+    JB NotLower
+    CMP AL, 'z'
+    JA NotLower
+    SUB AL, 20h         ; Convert to uppercase
+    MOV [SI], AL
+    INC wordCount       ; Increment word count
+    MOV BL, 0           ; No longer at start of word
+    JMP NextChar
+    
+NotLower:
+    ; Check if it's an uppercase letter (don't convert but count as word)
+    CMP AL, 'A'
+    JB NotLetter
+    CMP AL, 'Z'
+    JA NotLetter
+    INC wordCount       ; Increment word count
+    MOV BL, 0           ; No longer at start of word
+    JMP NextChar
+    
+NotLetter:
+    ; Check for space (word separator)
+    CMP AL, ' '
+    JNE NextChar
+    MOV BL, 1           ; Next character starts new word
+    JMP NextChar
+    
+NotWordStart:
+    ; Convert to lowercase if uppercase letter (not at start of word)
+    CMP AL, 'A'
+    JB NotUpper
+    CMP AL, 'Z'
+    JA NotUpper
+    ADD AL, 20h         ; Convert to lowercase
+    MOV [SI], AL
+    
+NotUpper:
+    ; Check for space (word separator)
+    CMP AL, ' '
+    JNE NextChar
+    MOV BL, 1           ; Next character starts new word
+    
+NextChar:
+    INC SI
+    JMP ConvertLoop
+    
+ConversionDone:
+    ; Display the converted string
+    LEA DX, msgConvertedTitle
+    CALL ShowMessageDX
+    LEA DX, buffer
+    CALL ShowMessageDX
+    CALL PrintNewLine
+    
+    ; Display word count
+    LEA DX, msgWordCount
+    CALL ShowMessageDX
+    MOV AX, wordCount
+    CALL NumberToStr
+    LEA DX, buffer
+    CALL ShowMessageDX
+    CALL PrintNewLine
+    
+    POP DI
+    POP SI
+    POP DX
+    POP CX
+    POP BX
+    POP AX
+    RET
+TitleCaseConversion ENDP
 
 END MAIN
