@@ -4,6 +4,7 @@
 .DATA
     ; Input/Output Buffers
     buffer      DB 100 DUP('$')   ; General purpose input buffer
+    tmpBuffer DB 3 DUP('$') 
     
     ; Messages
     menu_msg db 0Dh,0Ah,'1. Array Sorting/Even Odd Count',0Dh,0Ah
@@ -22,6 +23,11 @@
     msgTitle          DB 0Dh,0Ah,'Enter a sentence to convert to Title Case:',0Dh,0Ah,'$'
     msgWordCount      DB 0Dh,0Ah,'Number of words: $'
     msgConvertedTitle DB 0Dh,0Ah,'Converted Title Case:',0Dh,0Ah,'$'  
+
+    msgSquarePrompt   DB 0Dh,0Ah,'Enter a number (0-181): $'
+    msgSquareResult   DB 0Dh,0Ah,'Square: $'
+    msgSquareError    DB 0Dh,0Ah,'Invalid input! Must be 0-181.$'
+    
     
     ; Data Variables
     ParsedValue_array     DW 0               ; Stores converted numbers
@@ -29,6 +35,8 @@
     arrayOfNumbers    DW 100 DUP(0)      ; Array to store numbers
 
     wordCount   DW 0              ; Counter for number of words
+    squareResult      DW 0
+
 
 .CODE
     
@@ -69,7 +77,7 @@ title_case:
     jmp menu
 
 power_two:
-    ; call CalculatePowerTwo
+    call CalculateSquare
     call WaitForKey
     jmp menu
 
@@ -695,5 +703,106 @@ ConversionDone:
     POP AX
     RET
 TitleCaseConversion ENDP
+
+
+; ==================== SQUARE CALCULATION PROCEDURE ====================
+CalculateSquare PROC
+    PUSH AX
+    PUSH BX
+    PUSH CX
+    PUSH DX
+    PUSH SI
+    PUSH DI
+    
+    CALL ClearScreen
+    
+SquareInput:
+    ; Display prompt using existing procedure
+    LEA DX, msgSquarePrompt
+    CALL ShowMessageDX
+    
+    ; Read input using existing ReadLine
+    LEA DI, tmpBuffer
+    CALL ReadLine
+    
+    lea DX, tmpBuffer
+    ; CALL ShowMessageDX
+
+    ; Convert input to number using existing StrToNumber
+    LEA SI, tmpBuffer
+    CALL StrToNumber
+    JC InvalidInput      ; If conversion failed (CF=1)
+    
+    ; Validate range (0-181)
+    CMP AX, 0
+    JL InvalidInput
+    CMP AX, 181
+    JG InvalidInput
+    
+    ; Calculate square (n*n)
+    MOV BX, AX           ; Store input number
+    MUL BX               ; AX = AX * BX
+    MOV squareResult, AX ; Store result
+    
+    ; Display result using existing procedures
+    LEA DX, msgSquareResult
+    CALL ShowMessageDX
+    
+    ; Display input number
+    MOV AX, BX
+    CALL NumberToStr
+    LEA DX, buffer
+    CALL ShowMessageDX
+    
+    ; Display " squared = "
+    MOV AH, 02h
+    MOV DL, ' '
+    INT 21h
+    MOV DL, 's'
+    INT 21h
+    MOV DL, 'q'
+    INT 21h
+    MOV DL, 'u'
+    INT 21h
+    MOV DL, 'a'
+    INT 21h
+    MOV DL, 'r'
+    INT 21h
+    MOV DL, 'e'
+    INT 21h
+    MOV DL, 'd'
+    INT 21h
+    MOV DL, ' '
+    INT 21h
+    MOV DL, '='
+    INT 21h
+    MOV DL, ' '
+    INT 21h
+    
+    ; Display result
+    MOV AX, squareResult
+    CALL NumberToStr
+    LEA DX, buffer
+    CALL ShowMessageDX
+    
+    JMP SquareDone
+    
+InvalidInput:
+    LEA DX, msgSquareError
+    CALL ShowMessageDX
+    CALL PrintNewLine
+    JMP SquareInput      ; Let user try again
+    
+SquareDone:
+    CALL PrintNewLine
+    POP DI
+    POP SI
+    POP DX
+    POP CX
+    POP BX
+    POP AX
+    RET
+CalculateSquare ENDP
+
 
 END MAIN
